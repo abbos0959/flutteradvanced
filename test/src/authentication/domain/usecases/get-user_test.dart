@@ -19,7 +19,12 @@ void main() {
 
   const tResponse = [User.empty()];
   test("ey parivash bu getuser uchun test", () async {
-    when(() => repository.getuser())
-        .thenAnswer((_) async => const Right(tResponse));
+    when(() async => repository.getuser());
+    // .thenAnswer((_) async => const Right(tResponse));
+
+    final result = await usercase();
+    expect(result, equals(const Right<dynamic, List<User>>(tResponse)));
+    verify(() => repository.getuser()).called(1);
+    verifyNoMoreInteractions(repository);
   });
 }
