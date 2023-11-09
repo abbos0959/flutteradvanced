@@ -1,3 +1,5 @@
+import 'package:course/core/errors/excaption.dart';
+import 'package:course/core/errors/failure.dart';
 import 'package:course/core/utils/typedef.dart';
 import 'package:course/src/authentication/data/datasource/authentication-remote-datasource.dart';
 import 'package:course/src/authentication/domain/entities/user.dart';
@@ -15,13 +17,23 @@ class AuthenticationRepositoryImplementation
       {required String name,
       required String avatar,
       required String createdAt}) async {
-    await _remoteDatasource.createuser(
-        createdAt: createdAt, name: name, avatar: avatar);
-    return Right(null);
+    try {
+      await _remoteDatasource.createuser(
+          createdAt: createdAt, name: name, avatar: avatar);
+      return Right(null);
+    } on ServerEcxeption catch (e) {
+      return Left(ApiFailure.fromExcaption(e));
+    }
   }
 
   @override
-  Resultfuture<List<User>> getuser() {
-    throw UnimplementedError();
+  Resultfuture<List<User>> getuser() async {
+    try {
+      final result = await _remoteDatasource.getuser();
+
+      return Right(result);
+    } on ServerEcxeption catch (e) {
+      return Left(ApiFailure.fromExcaption(e));
+    }
   }
 }
