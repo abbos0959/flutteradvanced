@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "package:course/core/errors/excaption.dart";
+import "package:course/core/utils/typedef.dart";
 import 'package:course/src/authentication/data/models/user-model.dart';
 import "package:http/http.dart" as http;
 import "package:course/core/utils/constants.dart";
@@ -30,7 +31,7 @@ class AuthRemoteDataSourseImpl implements AuthenticationremoteDataSourse {
       required String avatar}) async {
     try {
       final response = await _client.post(
-        Uri.parse("$kbaseurl$kCreateBaseUrl"),
+        Uri.https(kbaseurl, kCreateBaseUrl),
         body: jsonEncode(
           {"avatar": "avatar", "name": "name", "createdAt": "createdAt"},
         ),
@@ -48,7 +49,22 @@ class AuthRemoteDataSourseImpl implements AuthenticationremoteDataSourse {
   }
 
   @override
-  Future<List<UserModel>> getuser() {
-    throw UnimplementedError();
+  Future<List<UserModel>> getuser() async {
+    try {
+      final response = await _client.get(Uri.http(kbaseurl, kGetBaserUrl));
+
+      if (response.statusCode != 200) {
+        throw ServerEcxeption(
+            message: response.body, statusCode: response.statusCode);
+      }
+
+      return List<DataMap>.from(jsonDecode(response.body) as List)
+          .map((e) => UserModel.fromMap(e))
+          .toList();
+    } on ServerEcxeption {
+      rethrow;
+    } catch (e) {
+      throw ServerEcxeption(message: e.toString(), statusCode: 500);
+    }
   }
 }

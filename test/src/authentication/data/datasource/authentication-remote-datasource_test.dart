@@ -4,6 +4,7 @@ import 'dart:html';
 import 'package:course/core/errors/excaption.dart';
 import 'package:course/core/utils/constants.dart';
 import 'package:course/src/authentication/data/datasource/authentication-remote-datasource.dart';
+import 'package:course/src/authentication/data/models/user-model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -31,7 +32,7 @@ void main() {
           (completes));
       verify(
         () => client.post(
-          Uri.parse("$kbaseurl$kCreateBaseUrl"),
+          Uri.https(kbaseurl, kCreateBaseUrl),
           body: jsonEncode(
             {"avatar": "avatar", "name": "name", "createdAt": "createdAt"},
           ),
@@ -52,7 +53,7 @@ void main() {
               message: "email xatoligi", statusCode: 400)));
       verify(
         () => client.post(
-          Uri.parse("$kbaseurl$kCreateBaseUrl"),
+          Uri.https(kbaseurl, kCreateBaseUrl),
           body: jsonEncode(
             {"avatar": "avatar", "name": "name", "createdAt": "createdAt"},
           ),
@@ -60,5 +61,37 @@ void main() {
       );
       verifyNoMoreInteractions(client);
     });
+  });
+
+  group("get userlar", () {
+    const tusers = [UserModel.empty()];
+    test(
+      "get user uchun test",
+      () async => {
+        when(() => client.get(any())).thenAnswer((_) async =>
+            http.Response(jsonEncode([tusers.first.toMap()]), 200)),
+        expect(await remoteDataSourse.getuser(), equals(tusers)),
+        verify(
+          () => client.post(Uri.http(kbaseurl, kCreateBaseUrl)),
+        ).called(1),
+        verifyNoMoreInteractions(client)
+      },
+    );
+
+    test(
+        "user topilmadi uchun test",
+        () async => {
+              when(() => client.get(any())).thenAnswer((_) async =>
+                  http.Response("voy ukajon nimadir xato ketdida endi ", 500)),
+              expect(
+                  remoteDataSourse.getuser(),
+                  throwsA(const ServerEcxeption(
+                      message:
+                          "ko'zinga qarab tersang bo'lmadydimi emailni  mana  oqibatda xato qilding",
+                      statusCode: 500))),
+              verify(() => client.get(Uri.http(kbaseurl, kGetBaserUrl)))
+                  .called(1),
+              verifyNoMoreInteractions(client)
+            });
   });
 }
